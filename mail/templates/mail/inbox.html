@@ -30,8 +30,37 @@
             <input type="submit" class="btn btn-primary"/>
         </form>
     </div>
+
+    
+    <!-- Modal -->
+    <div class="modal fade" id="email" tabindex="-1" role="dialog" aria-labelledby="emailTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="email-title" id="emailTitle">Email Title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-header">
+                <h6 class="email-info" id="emailInfo"> Email Info</h6>
+            </div>
+
+            <div class="modal-body" id="modalBody">
+                Email Body
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary">Reply</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+
+
 {% endblock %}
 
 {% block script %}
-    <script src="{% static 'mail/inbox.js' %}"></script>
+    <script type="module" src="{% static 'mail/inbox.js' %}"></script>
 {% endblock %}
