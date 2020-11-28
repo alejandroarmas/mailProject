@@ -1,7 +1,8 @@
-export function clear_compose_form() {
-    document.querySelector('#compose-recipients').value = '';
-    document.querySelector('#compose-subject').value = '';
-    document.querySelector('#compose-body').value = '';
+export function setComposeFormFields(recipients ="", subject ="", body="") {
+
+    document.querySelector('#compose-recipients').value = recipients;
+    document.querySelector('#compose-subject').value = subject;
+    document.querySelector('#compose-body').value = body;
   }
 
 

@@ -1,4 +1,4 @@
-import { clear_compose_form, createEmailComposeAlert, createNotification } from "./utils.js";
+import { createEmailComposeAlert, createNotification, setComposeFormFields } from "./utils.js";
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -7,21 +7,21 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
-  document.querySelector('#compose').addEventListener('click', compose_email);
+  document.querySelector('#compose').addEventListener('click', () => compose_email());
 
   // By default, load the inbox
   load_mailbox('inbox');
 });
 
 
-function compose_email() {
+function compose_email(recipients="", subject="", body="") {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
   // Clear out composition fields
-  clear_compose_form()
+  setComposeFormFields(recipients, subject, body)
 
   document.querySelector("#compose-form").addEventListener('submit', (event) => {
 
@@ -49,7 +49,7 @@ function compose_email() {
         document.querySelector("#compose-view").insertBefore(message, document.querySelector("#compose-form"))
       }
 
-      clear_compose_form()
+      setComposeFormFields()
     })
 
     event.preventDefault();
@@ -81,7 +81,7 @@ function showAllEmailPreviews(data, mailbox) {
 
   const emailsContainer = document.createElement("ul");
   emailsContainer.className = "list-group";
-  emailsContainer.addEventListener("click", event => accessEmail(event));
+  emailsContainer.addEventListener("click", event => accessEnlargedEmail(event));
 
   data.forEach(emaildata => {
 
@@ -101,10 +101,10 @@ function createEmailPreview(emaildata , mailbox) {
   const emailPreview = document.createElement("li")
   const emailPreviewContent = document.createElement("h5")
 
-  emailPreview.addEventListener("click", event => accessEmail(event));
+  emailPreview.addEventListener("click", event => accessEnlargedEmail(event));
   emailPreview.addEventListener("click", event => {
     if (!userDidSend) {
-      setEmailRead(event.currentTarget.id, mailbox)
+      setEmailRead(event.currentTarget.id)
     }
   })
 
@@ -130,7 +130,7 @@ function createEmailPreview(emaildata , mailbox) {
 }
 
 
-function accessEmail(event) {
+function accessEnlargedEmail(event) {
   if (event.currentTarget) {
 
 
@@ -153,16 +153,22 @@ function accessEmail(event) {
         keyboard: true
       })
 
-      // document.querySelector("#")
+      document.querySelector("#reply").addEventListener("click", () =>
+      {
+        const responseSubject = `RE: ${data["subject"]}`;
+        const recipients = data["sender"];
+        const body = `> ${data["body"]} \n`
 
-
+        compose_email(recipients, responseSubject, body)
+        
+      })
     })
 
   }
 }
 
 
-function setEmailRead(emailId, mailbox) {
+function setEmailRead(emailId) {
   
   fetch(`emails/${emailId}`, {
     method: "PUT",
