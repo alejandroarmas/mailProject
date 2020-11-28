@@ -81,9 +81,7 @@ function showAllEmailPreviews(data, mailbox) {
 
   const emailsContainer = document.createElement("ul");
   emailsContainer.className = "list-group";
-  emailsContainer.addEventListener("click", event => displayEmail(event));
-  // emailsContainer.addEventListener("click", event => printstuff("Hello World"));
-  // emailsContainer.addEventListener("click", event => setEmailRead(event.currentTarget.id) );
+  emailsContainer.addEventListener("click", event => accessEmail(event));
 
   data.forEach(emaildata => {
 
@@ -99,10 +97,17 @@ function showAllEmailPreviews(data, mailbox) {
 
 function createEmailPreview(emaildata , mailbox) {
 
-  const emailPreview = document.createElement("li")
-  emailPreview.addEventListener("click", event => displayEmail(event));
-  const emailPreviewContent = document.createElement("h5")
   const userDidSend = (mailbox === "sent")
+  const emailPreview = document.createElement("li")
+  const emailPreviewContent = document.createElement("h5")
+
+  emailPreview.addEventListener("click", event => accessEmail(event));
+  emailPreview.addEventListener("click", event => {
+    if (!userDidSend) {
+      setEmailRead(event.currentTarget.id, mailbox)
+    }
+  })
+
   let otherUsers = null;
 
   if (userDidSend){
@@ -111,7 +116,8 @@ function createEmailPreview(emaildata , mailbox) {
   } 
   else {
     otherUsers = emaildata["sender"];
-    emailPreview.appendChild(createNotification("unread"));
+    const emailStatus = emaildata["read"] ? "read" : "unread";
+    emailPreview.appendChild(createNotification(emailStatus, emaildata["id"]));
   }
 
   emailPreview.id = emaildata["id"]
@@ -124,9 +130,9 @@ function createEmailPreview(emaildata , mailbox) {
 }
 
 
-function displayEmail(event) {
+function accessEmail(event) {
   if (event.currentTarget) {
-  
+
 
     const emailTitle = document.querySelector("#emailTitle")
     const emailInfo = document.querySelector("#emailInfo")
@@ -146,14 +152,17 @@ function displayEmail(event) {
         show: true,
         keyboard: true
       })
+
+      // document.querySelector("#")
+
+
     })
 
   }
 }
 
 
-
-function setEmailRead(emailId) {
+function setEmailRead(emailId, mailbox) {
   
   fetch(`emails/${emailId}`, {
     method: "PUT",
@@ -161,9 +170,14 @@ function setEmailRead(emailId) {
       read: true
     })
   })
-  .then(response => response.json())
-  .then(data => console.log(data))
-
+  .then(
+      // Change badge when modal closes to "READ"
+    $('#email').on('hidden.bs.modal', event => {
+      const badge = $(`[data-id="${emailId}"]`)[0]
+      badge.innerHTML = "Read"
+      badge.className = "badge badge-success"
+    })
+    )
 }
 
 
@@ -175,9 +189,7 @@ function setEmailArchive(emailId, archived=True) {
       archived: archived
     })
   })
-  .then(response => response.json())
-  .then(data => console.log(data))
-
+  
 }
 
 

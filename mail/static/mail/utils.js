@@ -9,7 +9,7 @@ export function createEmailComposeAlert(jsonResponse) {
 
     const message = document.createElement("div")
     message.className = "alert alert-";
-  
+
     let messageText = null
   
     if (jsonResponse.hasOwnProperty("message")) {
@@ -26,14 +26,21 @@ export function createEmailComposeAlert(jsonResponse) {
   }
 
 
-export function createNotification(type) {
+export function createNotification(type, emailId) {
 
     const notification = document.createElement("span")
+    notification.setAttribute("data-id", emailId)
     let badge = "badge badge-"
-  
+
+
     if (type === "unread") {
       notification.className = badge + "warning"
       notification.innerHTML = "Unread"
+    }
+    else if (type === "read"){
+        notification.className = badge + "success"
+        notification.innerHTML = "Read"
+
     }
     else if (type === "archived"){
       notification.className =  badge + "info"
