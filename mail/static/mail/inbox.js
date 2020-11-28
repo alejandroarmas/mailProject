@@ -1,3 +1,6 @@
+import { clear_compose_form, createEmailComposeAlert, createNotification } from "./utils.js";
+
+
 document.addEventListener('DOMContentLoaded', function() {
 
   // Use buttons to toggle between views
@@ -9,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // By default, load the inbox
   load_mailbox('inbox');
 });
+
 
 function compose_email() {
 
@@ -25,9 +29,6 @@ function compose_email() {
     const subject = document.querySelector('#compose-subject').value;
     const body = document.querySelector('#compose-body').value;
 
-    const message = document.createElement("div")
-    message.className = "alert alert-";
-
     fetch("/emails", {
       method: "POST",
       body: JSON.stringify({
@@ -39,17 +40,7 @@ function compose_email() {
     .then(response => response.json())
     .then(jsonResponse => {
 
-      let messageText = null
-
-      if (jsonResponse.hasOwnProperty("message")) {
-        message.className += "success";
-        messageText = jsonResponse["message"]
-      } else {
-        message.className += "danger";
-        messageText = jsonResponse["error"]
-      }
-
-      message.innerHTML = messageText
+      const message = createEmailComposeAlert(jsonResponse);
 
       let alert = document.querySelector(".alert")
       if (alert !== null) {
@@ -67,13 +58,6 @@ function compose_email() {
 
 }
 
-function clear_compose_form() {
-  document.querySelector('#compose-recipients').value = '';
-  document.querySelector('#compose-subject').value = '';
-  document.querySelector('#compose-body').value = '';
-}
-
-
 
 function load_mailbox(mailbox) {
   
@@ -83,5 +67,118 @@ function load_mailbox(mailbox) {
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3> ${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
+  fetch(`/emails/${mailbox}`, {
+    method: "GET"
+  })
+  .then(response => response.json())
+  .then(emailsData => showAllEmailPreviews(emailsData, mailbox))
+
 }
+
+
+function showAllEmailPreviews(data, mailbox) {
+
+  const emailsContainer = document.createElement("ul");
+  emailsContainer.className = "list-group";
+  emailsContainer.addEventListener("click", event => displayEmail(event));
+  // emailsContainer.addEventListener("click", event => printstuff("Hello World"));
+  // emailsContainer.addEventListener("click", event => setEmailRead(event.currentTarget.id) );
+
+  data.forEach(emaildata => {
+
+    const email = createEmailPreview(emaildata, mailbox);
+    emailsContainer.appendChild(email)
+
+  });
+
+  document.querySelector('#emails-view').append(emailsContainer)
+
+}
+
+
+function createEmailPreview(emaildata , mailbox) {
+
+  const emailPreview = document.createElement("li")
+  emailPreview.addEventListener("click", event => displayEmail(event));
+  const emailPreviewContent = document.createElement("h5")
+  const userDidSend = (mailbox === "sent")
+  let otherUsers = null;
+
+  if (userDidSend){
+    otherUsers = emaildata["recipients"];
+
+  } 
+  else {
+    otherUsers = emaildata["sender"];
+    emailPreview.appendChild(createNotification("unread"));
+  }
+
+  emailPreview.id = emaildata["id"]
+  emailPreview.className = "list-group-item list-group-item-action list-group-item-light";
+  emailPreviewContent.innerHTML = `${otherUsers} - ${emaildata["subject"]} - ${emaildata["body"] } - ${emaildata["timestamp"] }` 
+  emailPreviewContent.style.textOverflow = "ellipsis"
+  emailPreview.appendChild(emailPreviewContent)
+
+  return emailPreview;
+}
+
+
+function displayEmail(event) {
+  if (event.currentTarget) {
+  
+
+    const emailTitle = document.querySelector("#emailTitle")
+    const emailInfo = document.querySelector("#emailInfo")
+    const emailBody = document.querySelector("#modalBody")
+
+    event.stopPropagation()
+    
+    fetch("emails/" + event.currentTarget.id, {
+      method: "GET"
+    })
+    .then(response => response.json())
+    .then(data => {
+      emailTitle.innerHTML = data["subject"]
+      emailInfo.innerHTML = `via ${data["sender"]} at ${data["timestamp"]}`
+      emailBody.innerHTML = data["body"]
+      $('#email').modal({
+        show: true,
+        keyboard: true
+      })
+    })
+
+  }
+}
+
+
+
+function setEmailRead(emailId) {
+  
+  fetch(`emails/${emailId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      read: true
+    })
+  })
+  .then(response => response.json())
+  .then(data => console.log(data))
+
+}
+
+
+function setEmailArchive(emailId, archived=True) {
+  
+  fetch(`emails/${emailId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      archived: archived
+    })
+  })
+  .then(response => response.json())
+  .then(data => console.log(data))
+
+}
+
+
 
